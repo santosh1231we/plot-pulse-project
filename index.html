@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Trends Explorer</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23f67280'/><polyline points='6,22 10,20 14,18 18,16 22,14' fill='none' stroke='white' stroke-width='2.5'/><polyline points='22,14 26,12' fill='none' stroke='white' stroke-width='2' stroke-dasharray='2,1'/><circle cx='22' cy='14' r='1.5' fill='white'/><circle cx='26' cy='12' r='1.5' fill='white' opacity='0.8'/></svg>">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.svg">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#f67280">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="container">
+        <header class="header fade-in">
+            <h1 class="title">
+                <span class="icon">📊</span>
+                Google Trends Explorer
+            </h1>
+            <p class="subtitle">Discover trending topics with beautiful visualizations</p>
+        </header>
+        
+        <section class="search-section slide-up">
+            <div class="search-card">
+                <div class="search-container">
+                    <input type="text" id="keyword-input" placeholder="Enter a keyword to explore trends..." class="search-input">
+                    <button id="search-btn" class="search-btn">
+                        <span class="btn-text">Explore</span>
+                        <span class="btn-loading hidden">
+                            <div class="spinner"></div>
+                        </span>
+                    </button>
+                </div>
+                
+                <div class="date-range-container">
+                    <div class="date-input-group">
+                        <label for="start-date" class="date-label">From:</label>
+                        <input type="date" id="start-date" class="date-input">
+                    </div>
+                    <div class="date-input-group">
+                        <label for="end-date" class="date-label">To:</label>
+                        <input type="date" id="end-date" class="date-input">
+                    </div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-years="1">1Y</button>
+                        <button class="preset-btn" data-years="2">2Y</button>
+                        <button class="preset-btn active" data-years="5">5Y</button>
+                        <button class="preset-btn" data-years="10">10Y</button>
+                    </div>
+                </div>
+                
+                <div class="search-suggestions">
+                    <span class="suggestion-label">Try:</span>
+                    <button class="suggestion-tag" data-keyword="artificial intelligence">AI</button>
+                    <button class="suggestion-tag" data-keyword="remote work">Remote Work</button>
+                    <button class="suggestion-tag" data-keyword="cryptocurrency">Crypto</button>
+                    <button class="suggestion-tag" data-keyword="climate change">Climate</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="upload-section slide-up" id="upload-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h2 class="chart-title">Upload Data</h2>
+                </div>
+
+                <div class="upload-controls">
+                    <div class="upload-control">
+                        <label class="upload-label" for="data-file">CSV / Excel file</label>
+                        <input id="data-file" class="upload-input" type="file" accept=".csv,.xlsx,.xls">
+                        <div class="upload-hint" id="data-file-hint">Upload a .csv or .xlsx file to generate a chart.</div>
+                    </div>
+
+                    <div class="upload-control">
+                        <label class="upload-label" for="chart-type">Chart type</label>
+                        <select id="chart-type" class="upload-select">
+                            <option value="line">Line</option>
+                            <option value="bar">Bar</option>
+                            <option value="pie">Pie</option>
+                            <option value="doughnut">Doughnut</option>
+                            <option value="scatter">Scatter</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-control">
+                        <label class="upload-label" for="x-column">X column</label>
+                        <select id="x-column" class="upload-select" disabled>
+                            <option value="">Upload a file first</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-control">
+                        <label class="upload-label" for="y-column">Y column</label>
+                        <select id="y-column" class="upload-select" disabled>
+                            <option value="">Upload a file first</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-control" id="aggregation-control" style="display: none;">
+                        <label class="upload-label" for="aggregation">Aggregation</label>
+                        <select id="aggregation" class="upload-select">
+                            <option value="sum">Sum</option>
+                            <option value="count">Count</option>
+                            <option value="avg">Average</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-actions">
+                        <button id="render-upload-chart" class="control-btn" disabled>
+                            Render Chart
+                        </button>
+                        <button id="download-upload-chart" class="control-btn" disabled>
+                            Download PNG
+                        </button>
+                        <button id="clear-upload-chart" class="control-btn" disabled>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chart-container upload-chart-container" id="upload-chart-container" style="display: none;">
+                    <canvas id="uploadChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <section class="chart-section slide-up" id="chart-section" style="display: none;">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h2 class="chart-title" id="chart-title">Trend Analysis</h2>
+                    <div class="chart-controls">
+                        <div class="prediction-slider-container">
+                            <label for="prediction-slider" class="slider-label">Prediction Period:</label>
+                            <input type="range" id="prediction-slider" class="prediction-slider" min="6" max="60" value="24" step="6">
+                            <span id="prediction-value" class="slider-value">24 months</span>
+                        </div>
+                        <button class="control-btn" id="toggle-prediction">
+                            <span class="control-icon">🔮</span>
+                            Toggle Prediction
+                        </button>
+                        <button class="control-btn" id="download-chart">
+                            <span class="control-icon">📥</span>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color actual"></span>
+                        <span class="legend-label">Actual Trend</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color predicted"></span>
+                        <span class="legend-label">Predicted Trend</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="stats-section slide-up" id="stats-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="max-interest">0</div>
+                    <div class="stat-label">Peak Interest</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value" id="peak-date">-</div>
+                    <div class="stat-label">Peak Date</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="avg-interest">0</div>
+                    <div class="stat-label">Average</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="trend-direction">-</div>
+                    <div class="stat-label">Trend</div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="footer fade-in">
+            <div class="footer-content">
+                <p>Built with ❤️ by Group 3</p>
+            </div>
+        </footer>
+    </div>
+    
+    <div id="error-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-icon">⚠️</span>
+                <h3>Oops!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">Something went wrong. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="close-error">Got it</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File parsing helpers -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>

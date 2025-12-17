@@ -1,0 +1,9 @@
+{
+  "name": "Trends Analysis",
+  "short_name": "Trends",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f67280",
+  "icons": []
+}
